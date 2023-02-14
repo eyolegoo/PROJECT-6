@@ -4,7 +4,7 @@ WEB SOLUTION WITH WORDPRESS
 
 ## WEB SOLUTION WITH WORDPRESS
 
-***Step 1 — Prepare a Web Server***
+**Step 1 — Prepare a Web Server**
 
 - Launch an EC2 instance that will serve as "Web Server". Create 3 volumes in the same AZ as your Web Server EC2, each of 10 GiB.
 
@@ -105,3 +105,107 @@ important)
 
 - `sudo blkid`
 
+<img width="507" alt="sudo blkid" src="https://user-images.githubusercontent.com/115954100/218827462-f7ddfcdf-9d1a-451c-9b71-279af208ab94.png">
+
+- `sudo vi /etc/fstab`
+
+- Update **/etc/fstab** in this format using your own UUID and rememeber to remove the leading and ending quotes.
+
+<img width="504" alt="UUID" src="https://user-images.githubusercontent.com/115954100/218828944-a648eaf5-0be7-445a-9ff7-da28b79f3927.png">
+
+- Test the configuration and reload the daemon
+
+- `sudo mount -a`
+- `sudo systemctl daemon-reload`
+
+- Verify your setup by running **df -h**, output must look like this:
+
+<img width="422" alt="Updating fstab and reload the deamon" src="https://user-images.githubusercontent.com/115954100/218831209-440fa4d5-dd8f-4ea1-a289-1d7ea932a3a0.png">
+
+**Step 2 — Prepare the Database Server**
+
+- Launch a second RedHat EC2 instance that will have a role – ‘DB Server’
+Repeat the same steps as for the Web Server, but instead of **apps-lv** create **db-lv** and mount it to **/db** directory instead of **/var/www/html/**.
+
+**Step 3 — Install WordPress on your Web Server EC2**
+
+- Update the repository
+
+- `sudo yum -y update`
+
+- Install wget, Apache and it’s dependencies
+
+- `sudo yum -y install wget httpd php php-mysqlnd php-fpm php-json`
+
+- Start Apache
+
+- `sudo systemctl enable httpd`
+- `sudo systemctl start httpd`
+
+- To install PHP and it’s depemdencies
+
+- Understands the redhat server version you are working with cause this will determine the **RHEL version of EPEL and Remirepo of the PHP dependencies to install**
+
+```
+ sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+ sudo yum install yum-utils http://rpms.remirepo.net/enterprise/remi-release-9.rpm
+ sudo yum module list php
+ sudo yum module reset php
+ sudo yum module enable php:remi-8.1
+ sudo yum install php php-opcache php-gd php-curl php-mysqlnd
+ sudo systemctl start php-fpm
+ sudo systemctl enable php-fpm
+ setsebool -P httpd_execmem 1
+```
+
+- Restart Apache
+
+- `sudo systemctl restart httpd`
+
+<img width="944" alt="PHP and Apache is running" src="https://user-images.githubusercontent.com/115954100/218851211-85673b47-2987-43da-9d82-b5c5dc2aa1c1.png">
+
+- Download wordpress and copy wordpress to **var/www/html**
+
+```
+ mkdir wordpress
+ cd wordpress
+ sudo wget http://wordpress.org/latest.tar.gz
+ sudo tar xzvf latest.tar.gz
+ sudo rm -rf latest.tar.gz
+ cp wordpress/wp-config-sample.php wordpress/wp-config.php
+ cp -R wordpress /var/www/html/
+```
+
+- Configure SELinux Policies
+
+```
+ sudo chown -R apache:apache /var/www/html/wordpress
+ sudo chcon -t httpd_sys_rw_content_t /var/www/html/wordpress -R
+ sudo setsebool -P httpd_can_network_connect=1
+```
+
+**Step 4 — Install MySQL on your DB Server EC2**
+
+```
+sudo yum update
+sudo yum install mysql-server
+```
+
+- Verify that the service is up and running by using `sudo systemctl status mysqld`, if it is not running, restart the service and enable it so it will be running even after reboot:
+
+```
+sudo systemctl restart mysqld
+sudo systemctl enable mysqld
+```
+
+**Step 5 — Configure DB to work with WordPress**
+
+```
+ sudo mysql
+ CREATE DATABASE wordpress;
+ CREATE USER 'Godwin'@'%' IDENTIFIED WITH mysql_native_password BY 'GodwynE';
+ GRANT ALL ON wordpress.* TO 'Godwin'@'%' WITH GRANT OPTION;
+ FLUSH PRIVILEGES;
+ SHOW DATABASES;
+ exit
+```
