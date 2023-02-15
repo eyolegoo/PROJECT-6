@@ -211,8 +211,11 @@ sudo systemctl enable mysqld
  GRANT ALL ON wordpress.* TO 'Godwin'@'%' WITH GRANT OPTION;
  FLUSH PRIVILEGES;
  SHOW DATABASES;
- exit
-```
+``` 
+
+<img width="612" alt="Wordpress database created for DB server" src="https://user-images.githubusercontent.com/115954100/219131626-0722b275-fe00-42ed-8416-262d0cd85fe0.png">
+
+- I exited using `exit`
 
 - After this, I set up the bind address using `sudo vi /etc/my.cnf`
 
@@ -239,3 +242,28 @@ sudo systemctl enable mysqld
 - I tested to see that I can connect from my Web Server to my DB server using
 
 - `sudo mysql -h private IP of the database server -u username -p`
+
+- I successfully execute `SHOW DATABASES`; command to see a list of existing databases.
+
+<img width="952" alt="Using mysql server to connect with the database" src="https://user-images.githubusercontent.com/115954100/219132035-4446d1f0-939b-4ca2-ae96-44a3a22b2e91.png">
+
+- I changed permissions and configuration so Apache could use WordPress by using the following commands:
+
+```
+ sudo chown -R apache:apache /var/www/html/
+ sudo chcon -t httpd_sys_rw_content_t /var/www/html/ -R
+ sudo setsebool -P httpd_can_network_connect=1
+ sudo setsebool -P httpd_can_network_connect_db 1
+```
+
+- Enable TCP port 80 in Inbound Rules configuration for your Web Server EC2 (enable from everywhere 0.0.0.0/0 or from your workstation’s IP)
+
+- Try to access from your browser the link to your WordPress
+
+- `http://<Web-Server-Public-IP-Address>/wordpress/
+
+![wordpress login](https://user-images.githubusercontent.com/115954100/219142252-1cd9ce73-0ded-46c3-90ee-195442bb646f.png)
+
+<img width="923" alt="wordpress installed and logged in" src="https://user-images.githubusercontent.com/115954100/219142315-cbc8b4d4-4229-400c-bf07-291c04a3489c.png">
+
+- **PROJECT COMPLETED**
