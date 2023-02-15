@@ -188,7 +188,7 @@ Repeat the same steps as for the Web Server, but instead of **apps-lv** create *
 
 ```
 sudo yum update
-sudo yum install mysql-server
+sudo yum install mysql-server -y
 ```
 
 - Verify that the service is up and running by using `sudo systemctl status mysqld`, if it is not running, restart the service and enable it so it will be running even after reboot:
@@ -198,10 +198,14 @@ sudo systemctl restart mysqld
 sudo systemctl enable mysqld
 ```
 
+- A password was set for the user using `sudo mysql_secure_installation`. A simple password was set
+
 **Step 5 — Configure DB to work with WordPress**
 
+- Now with a password set for root user
+
 ```
- sudo mysql
+ sudo mysql -u root -p
  CREATE DATABASE wordpress;
  CREATE USER 'Godwin'@'%' IDENTIFIED WITH mysql_native_password BY 'GodwynE';
  GRANT ALL ON wordpress.* TO 'Godwin'@'%' WITH GRANT OPTION;
@@ -209,3 +213,29 @@ sudo systemctl enable mysqld
  SHOW DATABASES;
  exit
 ```
+
+- After this, I set up the bind address using `sudo vi /etc/my.cnf`
+
+<img width="461" alt="Bind address" src="https://user-images.githubusercontent.com/115954100/218948504-2f5da033-af47-4e1f-8894-d21cec721531.png">
+
+- I restarted the service using `sudo systemctl restart mysqld`
+
+- Back to the **web server** wp-config.php was edited using `sudo vi wp-config.php`
+
+<img width="560" alt="wp-config php" src="https://user-images.githubusercontent.com/115954100/218951780-5c91122a-828b-41bd-a886-9c925172489d.png">
+
+- I restarted the service using `sudo systemctl restart httpd`
+
+- In order to see the default page of wordpress, the default web page of Apache was disabled using
+
+- `sudo mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf_backup`
+
+**Step 6 — Configure WordPress to connect to remote database**
+
+- **Hint**: Do not forget to open MySQL port 3306 on DB Server EC2. For extra security, you shall allow access to the DB server **ONLY** from your Web Server’s IP address, so in the Inbound Rule configuration specify source as /32
+
+<img width="815" alt="Inbound rules" src="https://user-images.githubusercontent.com/115954100/218948642-94c5f851-e2bc-4514-814c-bba63157c9c2.png">
+
+- I tested to see that I can connect from my Web Server to my DB server using
+
+- `sudo mysql -h private IP of the database server -u username -p`
